@@ -1,0 +1,46 @@
+name: Sync main into emulator UI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-main-into-emulator-ui
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the UI branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/emulator-ui
+          fetch-depth: 0
+
+      - name: Merge the latest main and publish
+        shell: bash
+        run: |
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "feat/emulator-ui already contains the latest main."
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          if ! git merge --no-edit origin/main; then
+            git diff --name-only --diff-filter=U
+            echo "::error::Automatic merge failed. Merge main into feat/emulator-ui locally and resolve the conflicts before pushing."
+            exit 1
+          fi
+
+          git push origin HEAD:refs/heads/feat/emulator-ui
