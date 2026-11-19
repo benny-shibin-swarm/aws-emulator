@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emulator Console</title>
+  <link rel="stylesheet" href="/console.css">
+  <script src="/console.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home"><span class="brand-mark" aria-hidden="true">E</span> Emulator Console</a>
+    <div class="service-search">
+      <input id="search" type="search" aria-label="Search services" aria-controls="search-results" placeholder="Search services" autocomplete="off">
+      <div id="search-results" class="search-results" aria-label="Matching services" hidden></div>
+    </div>
+    <div class="topbar-controls">
+      <span id="connection" role="status">Checking connection…</span>
+      <label class="region">Region
+        <select id="region">
+          <option>us-east-1</option><option>us-east-2</option>
+          <option>us-west-1</option><option>us-west-2</option>
+          <option>eu-west-1</option><option>eu-central-1</option>
+          <option>ap-southeast-1</option><option>ap-northeast-1</option>
+        </select>
+      </label>
+      <span class="account-context">Local account</span>
+    </div>
+  </header>
+  <div id="service-bar" class="service-bar" hidden>
+    <button id="toggle-nav" class="nav-toggle" type="button" aria-label="Toggle S3 navigation" title="Toggle S3 navigation" aria-controls="main-nav" aria-expanded="true"><span aria-hidden="true">☰</span></button>
+    <strong>Amazon S3</strong>
+  </div>
+  <div class="layout">
+    <nav id="main-nav" aria-label="Main navigation">
+      <a href="#home" id="home-link">Console home</a>
+      <p class="nav-heading">Services</p>
+      <a href="#s3" id="s3-link">Amazon S3</a>
+      <div id="s3-nav" class="subnav" hidden><a href="#s3">Buckets</a></div>
+    </nav>
+    <main>
+      <section id="home">
+        <div class="breadcrumbs"><span>Console home</span></div>
+        <h1>Console home</h1>
+        <div class="home-grid">
+          <section class="panel services-panel">
+            <div class="panel-heading"><h2>Services</h2></div>
+            <div id="catalog" class="catalog"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><h2>Local emulator</h2></div>
+            <dl class="summary">
+              <dt>Connection</dt><dd id="home-connection">Checking connection…</dd>
+              <dt>API endpoint</dt><dd><code id="endpoint"></code></dd>
+              <dt>Account</dt><dd><code>000000000000</code></dd>
+            </dl>
+          </section>
+        </div>
+      </section>
+      <section id="storage" hidden>
+        <div id="breadcrumbs" class="breadcrumbs" aria-label="Bucket path"></div>
+        <div class="workspace-title">
+          <h1 id="title">Amazon S3</h1>
+          <p id="workspace-description"></p>
+        </div>
+        <div class="resource-grid">
+          <div class="panel">
+            <div class="panel-heading resource-heading">
+              <div><h2 id="resource-title">Buckets</h2><span id="resource-count"></span></div>
+              <div class="resource-actions">
+                <button id="refresh" class="icon-button" type="button" aria-label="Refresh" title="Refresh"><span aria-hidden="true">↻</span></button>
+                <button id="upload-object" class="primary" type="button" hidden>Upload</button>
+                <button id="delete-bucket" type="button" hidden>Delete bucket</button>
+                <button id="create-bucket" class="primary" type="button">Create bucket</button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <input id="resource-filter" type="search" aria-label="Filter this page" placeholder="Filter this page" disabled>
+              <div class="pagination" id="pagination" hidden>
+                <button id="previous" type="button">Previous</button>
+                <span id="page"></span>
+                <button id="next" type="button">Next</button>
+              </div>
+            </div>
+            <p id="notice" role="status"></p>
+            <div class="table-wrap">
+              <table id="table" class="storage-table" aria-label="S3 resources" hidden>
+                <thead id="columns"></thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+          </div>
+          <aside class="panel environment">
+            <div class="panel-heading"><h2>Local environment</h2></div>
+            <dl class="summary">
+              <dt>Connection</dt><dd id="storage-connection">Checking connection…</dd>
+              <dt>API endpoint</dt><dd><code id="storage-endpoint"></code></dd>
+              <dt>Listing scope</dt><dd id="listing-scope">All emulator regions</dd>
+            </dl>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="bucket-form-dialog" aria-labelledby="bucket-form-title">
+    <form id="bucket-form">
+      <div class="panel-heading"><h2 id="bucket-form-title">Create bucket</h2></div>
+      <div class="summary">
+        <p id="bucket-form-region"></p>
+        <label for="bucket-name">Bucket name</label>
+        <input id="bucket-name" required minlength="3" maxlength="63" autocomplete="off" autofocus>
+        <p id="bucket-form-error" role="alert" hidden></p>
+        <div class="resource-actions">
+          <button id="cancel-create" type="button">Cancel</button>
+          <button id="submit-create" class="primary" type="submit">Create bucket</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="object-detail" aria-labelledby="detail-title">
+    <div class="panel-heading">
+      <h2 id="detail-title">Object details</h2>
+      <form method="dialog"><button>Close</button></form>
+    </div>
+    <dl id="detail-fields" class="summary"></dl>
+    <p id="download-error" class="summary" role="alert" hidden></p>
+    <div class="summary">
+      <div class="resource-actions">
+        <button id="download-object" type="button">Download</button>
+        <button id="delete-object" type="button">Delete object</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="action-dialog" aria-labelledby="action-title">
+    <form id="action-form">
+      <div class="panel-heading"><h2 id="action-title"></h2></div>
+      <div class="summary">
+        <p id="action-description"></p>
+        <div id="upload-fields" class="summary" hidden>
+          <label for="upload-file">File</label>
+          <input id="upload-file" type="file">
+          <label for="upload-key">Object key</label>
+          <input id="upload-key" autocomplete="off">
+        </div>
+        <p id="action-error" role="alert" hidden></p>
+        <div class="resource-actions">
+          <button id="cancel-action" type="button">Cancel</button>
+          <button id="submit-action" type="submit"></button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
